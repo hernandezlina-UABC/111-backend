@@ -20,6 +20,16 @@ def init_db():
                 image TEXT NOT NULL
         )
         """)
+        
+        # COUPONS TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS coupons (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT NOT NULL,
+                discount INTEGER NOT NULL
+            )
+        """)
+        
         connection.commit() # Save changes to the DB
         connection.close() # Close the connection to the DB
     
@@ -50,6 +60,31 @@ def create_product():
         return jsonify({
             "message": "Product created successfully"
         }), 201 # Created
+        
+
+# --------- COUPONS ----------
+# Insert the 5 steps for the cretion of an endpoint
+# POST /api/coupons -> creates a new coupon to the db
+@app.post("/api/coupons")
+def create_coupon():
+    # Insert 5 SQL steps for the creating of a new record in coupons table
+    new_coupon = request.get_json()
+    code = new_coupon["code"]
+    discount = new_coupon["discount"]
+    
+    connection = sqlite3.connect(DB_NAME)
+    cursor = connection.cursor()
+    cursor.execute("""
+            INSERT INTO coupons (code, discount)
+            VALUES (?, ?)""", (code, discount)
+            )
+    connection.commit()
+    connection.close()
+            
+    return jsonify({
+        "message": "Coupon created successfully"
+    }), 201 
+            
 
 init_db()
 app.run(debug=True) # Execute the instance
