@@ -62,6 +62,60 @@ def create_product():
         }), 201 # Created
         
 
+# GET /api/products -> returns all the products
+@app.get("/api/products")
+def get_products():
+        connection = sqlite3.connect(DB_NAME)
+        #.row make each row behave like a dictionary
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        # SELECT column_name1, column_name2 FROM products           
+        cursor.execute("SELECT * FROM products")
+        # fetchall retrieves all rows from the result of the query
+        # fetchone retrieves one 
+        products_db = cursor.fetchall()
+        connection.close()
+        
+        print(products_db)
+        products = []
+        
+        for product in products_db:
+            products.append(dict(product))
+        
+        return jsonify({
+            "success": True,
+            "message": "Products retrieved successfully",
+            "data": products
+        }), 200
+        
+
+# GET /api/products/2 -> returns a product by id (path parameters)
+@app.get("/api/products/<int:product_id>")
+def get_product_by_id(product_id):
+    
+    connection = sqlite3.connect(DB_NAME)
+    connection.row_factory = sqlite3.Row
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM products WHERE id = ?", (product_id,))
+    product_db = cursor.fetchone()
+    
+    if not product_db:
+        connection.close()
+        return jsonify({
+            "success":False,
+            "message": "Product not found"       
+    }), 404
+        
+    connection.close()
+    product = dict(product_db)
+    
+    print(product_db)
+    return jsonify({"success":True,
+                    "message": "Product retrieved successfully",
+                    "data": product,
+    }), 200
+
+
 # --------- COUPONS ----------
 # Insert the 5 steps for the cretion of an endpoint
 # POST /api/coupons -> creates a new coupon to the db
@@ -84,7 +138,58 @@ def create_coupon():
     return jsonify({
         "message": "Coupon created successfully"
     }), 201 
+    
+    
+#  GET /api/coupons -> returns all the coupons
+@app.get("/api/coupons")
+def get_coupons():
+    connection = sqlite3.connect(DB_NAME)
+    connection.row_factory = sqlite3.Row
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM coupons")
+    coupons_db = cursor.fetchall()
+    connection.close()
+    
+    print(coupons_db)    
+    coupons = []
+    
+    for coupon in coupons_db:
+        coupons.append(dict(coupon))
+        
+    return jsonify({
+        "success": True,
+        "message": "Coupons retrieved successfully",
+        "data": coupons
+    }), 200
+          
+
+# GET /api/coupons/2 -> returns a coupon by id (path parameters)
+@app.get("/api/coupons/<int:coupon_id>")
+def get_coupon_by_id(coupon_id):
+        
+        connection = sqlite3.connect(DB_NAME)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM coupons WHERE id = ?", (coupon_id,))
+        coupon_db = cursor.fetchone()
+        
+        if not coupon_db:
+                connection.close()
+                return jsonify({
+                    "success": False,
+                    "message": "Coupon not found"       
+        }),404
             
+        connection.close()
+        product = dict(coupon_db)
+        
+        print(coupon_db)
+        return jsonify({"success":True,
+                        "message": "Coupon retrieved successfully",
+                        "data": product,
+        }), 200
+    
+  
 
 init_db()
 app.run(debug=True) # Execute the instance
