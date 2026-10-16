@@ -116,6 +116,60 @@ def get_product_by_id(product_id):
     }), 200
 
 
+# PUT /api/products -> updates a product by id
+# UPDATE users SET email = "..." WHERE id = 1
+@app.put("/api/products/<int:product_id>")
+def update_product_by_id(product_id):
+        # ==== VALIDATION =====
+        connection = sqlite3.connect(DB_NAME)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM products WHERE id=?", (product_id,))
+        product_db = dict(cursor.fetchone())
+        print(product_db)
+        
+        if not product_db:
+            connection.close()
+            return jsonify({
+                "success": False,
+                "message": "Product not found",
+            }), 404
+        
+        updated_product = request.get_json()
+        # name = updated_product["name"]
+        name = updated_product.get("name", product_db["name"])
+        price = updated_product.get("price", product_db["price"])
+        category = updated_product.get("category", product_db["category"])
+        image = updated_product.get("image", product_db["image"])
+        
+        cursor.execute("UPDATE products SET name=?, price=?, category=?, image=? WHERE id = ?", (name, price, category, image, product_id))
+        connection.commit()
+        connection.close()
+        
+        return jsonify({
+            "success":True,
+            "message":"Product updated successfully"
+        }), 200
+       
+
+
+# DELETE /api/products -> deletes a product by id
+# DELETE FROM users WHERE id = 1
+@app.delete("/api/products/<int:product_id>")
+def delete_product_by_id(product_id):
+        connection = sqlite3.connect(DB_NAME)
+        cursor = connection.cursor()
+        cursor.execute("DELETE FROM products WHERE id = ?", (product_id,))
+        connection.commit()
+        connection.close()
+        return jsonify({
+            "success": True,
+            "message": "Product deleted sucessfully"
+        }), 200
+
+
+
+
 # --------- COUPONS ----------
 # Insert the 5 steps for the cretion of an endpoint
 # POST /api/coupons -> creates a new coupon to the db
@@ -188,7 +242,60 @@ def get_coupon_by_id(coupon_id):
                         "message": "Coupon retrieved successfully",
                         "data": product,
         }), 200
-    
+
+# PUT /api/coupons/<coupon_id>
+@app.put("/api/coupons/<int:coupon_id>")
+def update_coupon_by_id(coupon_id):
+        connection = sqlite3.connect(DB_NAME)
+        connection.row_factory = sqlite3.Row
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM coupons WHERE id = ?", (coupon_id,))
+        coupon_db = dict(cursor.fetchone())
+        
+        if not coupon_db:
+            connection.close()
+            return jsonify({
+                "success": False,
+                "message": "Coupon not found"
+            }), 404
+        
+        updated_coupon = request.get_json()
+        code = updated_coupon.get("code", coupon_db["code"])
+        discount = updated_coupon.get("discount", coupon_db["discount"])
+        
+        cursor.execute("UPDATE coupons SET code=?, discount=?", (code, discount))
+        connection.commit()
+        connection.close()
+        
+        return jsonify({
+            "success": True,
+            "message": "Coupon updated successfully"
+        }), 200
+
+
+# DELETE /api/coupons/<coupon_id>
+@app.delete("/api/coupons/<int:coupon_id>")
+def delete_coupon_by_id(coupon_id):
+    connection = sqlite3.connect(DB_NAME)
+    connection.row_factory = sqlite3.Row
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM coupons WHERE id=?", (coupon_id,))
+    coupon_db = cursor.fetchone()
+            
+    if not coupon_db:
+        connection.close()
+        return jsonify({
+            "success": False,
+            "message": "Coupon not found"
+        }), 404
+
+    cursor.execute("DELETE FROM coupons WHERE id = ?", (coupon_id,))
+    connection.commit()
+    connection.close()
+    return jsonify({
+        "success":"Coupon deleted successfully"
+    }), 200
+
   
 
 init_db()
