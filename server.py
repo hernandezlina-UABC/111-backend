@@ -251,6 +251,7 @@ def update_coupon_by_id(coupon_id):
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM coupons WHERE id = ?", (coupon_id,))
         coupon_db = dict(cursor.fetchone())
+        print(coupon_db)
         
         if not coupon_db:
             connection.close()
@@ -263,7 +264,7 @@ def update_coupon_by_id(coupon_id):
         code = updated_coupon.get("code", coupon_db["code"])
         discount = updated_coupon.get("discount", coupon_db["discount"])
         
-        cursor.execute("UPDATE coupons SET code=?, discount=?", (code, discount))
+        cursor.execute("UPDATE coupons SET code=?, discount=? WHERE id=?", (code, discount, coupon_id))
         connection.commit()
         connection.close()
         
